@@ -7,6 +7,9 @@ morgan.token('content', function (req, res) {
 })
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :content'))
 
+const cors = require('cors')
+app.use(cors())
+
 let persons = [
     { 
       "id": 1,
