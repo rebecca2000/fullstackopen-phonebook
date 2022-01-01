@@ -43,7 +43,7 @@ app.get(`${baseURL}/:id`, (request, response, next) => {
     }).catch(err => next(err))
 })
 
-app.delete(`${baseURL}/:id`, (request, response) => {
+app.delete(`${baseURL}/:id`, (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
   .then(_ => {
     response.status(204).end()
@@ -52,20 +52,7 @@ app.delete(`${baseURL}/:id`, (request, response) => {
 })
 
 app.post(baseURL, (request, response, next) => {
-    const body = request.body
-
-    if (!body.name) {
-        console.log('name missing')
-        return response.status(400).json({ 
-            error: 'name missing' 
-        })
-    } else if (!body.number) {
-        console.log('number missing')
-        return response.status(400).json({ 
-            error: 'number missing' 
-        })
-    }
-    
+    const body = request.body   
     const newPerson = new Person({
         name: body.name,
         number: body.number,
@@ -76,7 +63,7 @@ app.post(baseURL, (request, response, next) => {
     }).catch(err => next(err))
 })
 
-app.put(`${baseURL}/:id`, (request, response) => {
+app.put(`${baseURL}/:id`, (request, response, next) => {
     if (!request.body.number) {
         console.log('number missing')
         return response.status(400).json({ 
@@ -88,7 +75,7 @@ app.put(`${baseURL}/:id`, (request, response) => {
         number: request.body.number,
     }
 
-    Person.findByIdAndUpdate(request.params.id, update, { new: true })
+    Person.findByIdAndUpdate(request.params.id, update, { runValidators: true, new: true })
         .then(updatedPerson => {
             response.json(updatedPerson)
         })
@@ -104,7 +91,9 @@ const errorHandler = (error, _request, response, next) => {
     console.error(error.message)
     if (error.name === 'CastError') {
       return response.status(400).send({ error: 'malformatted id' })
-    } 
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+    }
     next(error)
 }
 // this has to be the last loaded middleware.
